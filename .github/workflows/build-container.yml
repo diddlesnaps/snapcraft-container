@@ -1,0 +1,48 @@
+name: Build Container Images
+
+on:
+  schedule:
+  - cron: '33 4 * * 0'
+  push:
+    branches:
+    - master
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: crazy-max/ghaction-docker-buildx@v1
+    - run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - run: |
+        docker buildx build \
+        --platform linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+        --output type=registry \
+        --tag diddledan/snapcraft:core \
+        --file core-stable.Dockerfile .
+
+  core18:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: crazy-max/ghaction-docker-buildx@v1
+    - run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - run: |
+        docker buildx build \
+        --platform linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+        --output type=registry \
+        --tag diddledan/snapcraft:core18 \
+        --file core18-stable.Dockerfile .
+
+  core20:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: crazy-max/ghaction-docker-buildx@v1
+    - run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - run: |
+        docker buildx build \
+        --platform linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+        --output type=registry \
+        --tag diddledan/snapcraft:core20 \
+        --file core20-stable.Dockerfile .
