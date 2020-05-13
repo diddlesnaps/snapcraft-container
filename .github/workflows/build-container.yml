@@ -42,7 +42,7 @@ jobs:
     - run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
     - run: |
         docker buildx build \
-        --platform linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+        --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
         --output type=registry \
         --tag diddledan/snapcraft:core20 \
         --file core20-stable.Dockerfile .
