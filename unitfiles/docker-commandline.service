@@ -1,0 +1,12 @@
+[Unit]
+Description=Docker commandline
+
+[Service]
+ExecStart=/docker-commandline.sh
+Restart=no
+Type=oneshot
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=default.target
