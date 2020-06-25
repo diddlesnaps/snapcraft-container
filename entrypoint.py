@@ -12,7 +12,7 @@ if __name__ == "__main__":
 /bin/retry.py --quiet -n 60 --wait 5 sh -c 'snap changes | grep -q "Done.*Initialize system state"'
 snap install snapcraft --classic
 
-cd {wd}
+cd "{wd}"
 {commandline}
 
 /bin/systemctl exit $?
