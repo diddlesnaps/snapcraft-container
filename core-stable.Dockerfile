@@ -1,55 +1,63 @@
-FROM ubuntu:xenial as builder
-
-# Grab dependencies
-RUN apt-get update
-RUN apt-get dist-upgrade --yes
-RUN apt-get install --yes \
-      curl \
-      jq \
-      squashfs-tools
-
-# Grab the core snap (for backwards compatibility) from the stable channel and
-# unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' -H "X-Ubuntu-Architecture: $(dpkg --print-architecture)" 'https://api.snapcraft.io/api/v1/snaps/details/core' | jq '.download_url' -r) --output core.snap
-RUN mkdir -p /snap/core
-RUN unsquashfs -d /snap/core/current core.snap
-
-# Grab the core18 snap (which snapcraft uses as a base) from the stable channel
-# and unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' -H "X-Ubuntu-Architecture: $(dpkg --print-architecture)" 'https://api.snapcraft.io/api/v1/snaps/details/core18' | jq '.download_url' -r) --output core18.snap
-RUN mkdir -p /snap/core18
-RUN unsquashfs -d /snap/core18/current core18.snap
-
-# Grab the snapcraft snap from the stable channel and unpack it in the proper
-# place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' -H "X-Ubuntu-Architecture: $(dpkg --print-architecture)" 'https://api.snapcraft.io/api/v1/snaps/details/snapcraft?channel=stable' | jq '.download_url' -r) --output snapcraft.snap
-RUN mkdir -p /snap/snapcraft
-RUN unsquashfs -d /snap/snapcraft/current snapcraft.snap
-
-# Create a snapcraft runner (TODO: move version detection to the core of
-# snapcraft).
-RUN mkdir -p /snap/bin
-RUN echo "#!/bin/sh" > /snap/bin/snapcraft
-RUN snap_version="$(awk '/^version:/{print $2}' /snap/snapcraft/current/meta/snap.yaml)" && echo "export SNAP_VERSION=\"$snap_version\"" >> /snap/bin/snapcraft
-RUN snap_architecture="$(dpkg --print-architecture)" && echo "export SNAP_ARCH=\"$snap_architecture\"" >> /snap/bin/snapcraft
-RUN echo 'exec "$SNAP/usr/bin/python3" "$SNAP/bin/snapcraft" "$@"' >> /snap/bin/snapcraft
-RUN chmod +x /snap/bin/snapcraft
-
-# Multi-stage build, only need the snaps from the builder. Copy them one at a
-# time so they can be cached.
 FROM ubuntu:xenial
-COPY --from=builder /snap/core /snap/core
-COPY --from=builder /snap/core18 /snap/core18
-COPY --from=builder /snap/snapcraft /snap/snapcraft
-COPY --from=builder /snap/bin/snapcraft /snap/bin/snapcraft
-
-# Generate locale.
-RUN apt-get update && apt-get dist-upgrade --yes && apt-get install --yes sudo locales && apt-get clean && locale-gen en_US.UTF-8
 
 # Set the proper environment.
-ENV LANG="en_US.UTF-8"
-ENV LANGUAGE="en_US:en"
-ENV LC_ALL="en_US.UTF-8"
-ENV PATH="/snap/bin:$PATH"
-ENV SNAP="/snap/snapcraft/current"
-ENV SNAP_NAME="snapcraft"
+ENV DEBIAN_FRONTEND=noninteractive \
+      container=docker \
+      init=/lib/systemd/systemd
+
+# COPY systemctl.py /usr/bin/systemctl
+COPY unitfiles/docker-commandline.service /etc/systemd/system/
+
+RUN apt-get update -qq && \
+      apt-get dist-upgrade --yes && \
+      apt-get install --yes -qq --no-install-recommends \
+            fuse \
+            python3 \
+            snapd \
+            sudo \
+            systemd \
+      && \
+      apt-get clean && \
+      rm -rf /var/lib/apt/lists && \
+      touch /var/lib/snapd/system-key && \
+# remove systemd 'wants' triggers
+	find \
+		/etc/systemd/system/*.wants/ \
+		/lib/systemd/system/multi-user.target.wants/ \
+		/lib/systemd/system/local-fs.target.wants/ \
+		/lib/systemd/system/sockets.target.wants/*initctl* \
+		! -type d \
+		-delete && \
+# remove everything except tmpfiles setup in sysinit target
+	find \
+		/lib/systemd/system/sysinit.target.wants \
+		! -type d \
+		! -name '*systemd-tmpfiles-setup*' \
+		-delete && \
+# remove UTMP updater service
+	find \
+		/lib/systemd \
+		-name systemd-update-utmp-runlevel.service \
+		-delete && \
+# disable /tmp mount
+	rm -vf /usr/share/systemd/tmp.mount && \
+# disable most systemd console output
+      echo ShowStatus=no >> /etc/systemd/system.conf && \
+# disable ondemand.service
+	systemctl disable ondemand.service && \
+# set basic.target as default
+	systemctl set-default basic.target && \
+# enable the services we care about
+      systemctl enable snapd.service && \
+      systemctl enable snapd.socket && \
+      systemctl enable docker-commandline
+
+COPY entrypoint.py retry.py /bin/
+
+VOLUME ["/run", "/run/lock"]
+STOPSIGNAL SIGRTMIN+3
+
+# ENTRYPOINT ["/lib/systemd/systemd"]
+ENTRYPOINT ["/bin/entrypoint.py"]
+
+CMD ["snapcraft"]
