@@ -22,9 +22,9 @@ RUN apt-get update -qq && \
       touch /var/lib/snapd/system-key && \
 # remove systemd 'wants' triggers
 	find \
-		/etc/systemd/system/*.wants/* \
-		/lib/systemd/system/multi-user.target.wants/* \
-		/lib/systemd/system/local-fs.target.wants/* \
+		/etc/systemd/system/*.wants/ \
+		/lib/systemd/system/multi-user.target.wants/ \
+		/lib/systemd/system/local-fs.target.wants/ \
 		/lib/systemd/system/sockets.target.wants/*initctl* \
 		! -type d \
 		-delete && \
