@@ -5,8 +5,9 @@ Description=Docker commandline
 ExecStart=/docker-commandline.sh
 Restart=no
 Type=oneshot
-StandardOutput=journal+console
-StandardError=journal+console
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
 
 [Install]
 WantedBy=default.target

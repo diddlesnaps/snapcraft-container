@@ -9,13 +9,25 @@ if __name__ == "__main__":
         commandline = " ".join([shlex.quote(a) for a in sys.argv[1:]])
         cmd = open("/docker-commandline.sh", "w")
         cmd.write("""#!/bin/bash
+echo "Starting snapd.service via systemd."
 /bin/systemctl start snapd.service snapd.socket
+
+echo "Waiting for snapd to be ready..."
 /bin/retry.py --quiet -n 60 --wait 5 sh -c 'snap changes | grep -q "Done.*Initialize system state"'
+echo "Snapd is now ready."
+
+echo
+
+echo "Installing snapcraft."
 snap install snapcraft --classic
 
 cd "{wd}"
+
+echo
+echo "Running user script: {commandline}"
 {commandline}
 
+echo "Finished. The following messages are from systemd closing down, and may be ignored."
 /bin/systemctl exit $?
 """.format(wd=os.getcwd(), commandline=commandline))
         cmd.close()
