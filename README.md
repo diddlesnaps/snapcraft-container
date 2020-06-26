@@ -25,3 +25,10 @@ Drop to a shell with systemd running
 ```bash
 docker run --rm -it --privileged -v $PWD:$PWD -w $PWD diddledan/snapcraft:core18 bash
 ```
+
+Drop to a shell without starting systemd
+----------------------------------------
+
+```bash
+docker run --rm -it --privileged -v $PWD:$PWD -w $PWD --entrypoint bash diddledan/snapcraft:core18
+```
