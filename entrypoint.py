@@ -6,9 +6,14 @@ import shlex
 import subprocess
 
 if __name__ == "__main__":
-        commandline = " ".join([shlex.quote(a) for a in sys.argv[1:]])
-        cmd = open("/docker-commandline.sh", "w")
-        cmd.write("""#!/bin/bash
+    if sys.argv[1] == "snapcraft" or \
+        sys.argv[1] == "/snap/bin/snapcraft":
+        args = ["snap", "run", "snapcraft"] + sys.argv[2:]
+    else:
+        args = sys.argv[1:]
+    commandline = " ".join([shlex.quote(a) for a in args])
+    cmd = open("/docker-commandline.sh", "w")
+    cmd.write("""#!/bin/bash
 echo "Starting snapd.service via systemd."
 /bin/systemctl start snapd.service snapd.socket
 
@@ -30,6 +35,6 @@ echo "Running user script: {commandline}"
 echo "Finished. The following messages are from systemd closing down, and may be ignored."
 /bin/systemctl exit $?
 """.format(wd=os.getcwd(), commandline=commandline))
-        cmd.close()
-        os.chmod("/docker-commandline.sh", 0o755)
-        os.execvp("/lib/systemd/systemd", ["/lib/systemd/systemd", "--system"])
+    cmd.close()
+    os.chmod("/docker-commandline.sh", 0o755)
+    os.execvp("/lib/systemd/systemd", ["/lib/systemd/systemd", "--system"])

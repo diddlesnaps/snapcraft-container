@@ -60,4 +60,4 @@ STOPSIGNAL SIGRTMIN+3
 # ENTRYPOINT ["/lib/systemd/systemd"]
 ENTRYPOINT ["/bin/entrypoint.py"]
 
-CMD ["snapcraft"]
+CMD ["snap", "run", "snapcraft"]
