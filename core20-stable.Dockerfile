@@ -5,7 +5,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
       container=docker \
       init=/lib/systemd/systemd
 
-# COPY systemctl.py /usr/bin/systemctl
 COPY unitfiles/docker-commandline.service /etc/systemd/system/
 
 RUN apt-get update -qq && \
@@ -57,7 +56,6 @@ COPY entrypoint.py retry.py /bin/
 VOLUME ["/run", "/run/lock"]
 STOPSIGNAL SIGRTMIN+3
 
-# ENTRYPOINT ["/lib/systemd/systemd"]
 ENTRYPOINT ["/bin/entrypoint.py"]
 
 CMD ["snap", "run", "snapcraft"]

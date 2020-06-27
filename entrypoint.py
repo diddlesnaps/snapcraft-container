@@ -18,6 +18,9 @@ if __name__ == "__main__":
 rm -f /.dockerenv /run/.containerenv
 export SNAPCRAFT_BUILD_ENVIRONMENT=host
 
+# set LANG so that snapcraft/python has a better environment
+export LANG=C.UTF-8
+
 echo "Starting snapd.service via systemd."
 /bin/systemctl start snapd.service snapd.socket
 
