@@ -14,6 +14,10 @@ if __name__ == "__main__":
     commandline = " ".join([shlex.quote(a) for a in args])
     cmd = open("/docker-commandline.sh", "w")
     cmd.write("""#!/bin/bash
+# trick snapcraft into thinking we're NOT a container
+rm -f /.dockerenv /run/.containerenv
+export SNAPCRAFT_BUILD_ENVIRONMENT=host
+
 echo "Starting snapd.service via systemd."
 /bin/systemctl start snapd.service snapd.socket
 
