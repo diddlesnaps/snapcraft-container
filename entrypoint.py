@@ -25,7 +25,7 @@ echo "Starting snapd.service via systemd."
 /bin/systemctl start snapd.service snapd.socket
 
 echo "Waiting for snapd to be ready..."
-/bin/retry.py --quiet -n 60 --wait 5 sh -c 'snap changes | grep -q "Done.*Initialize system state"'
+snap wait system seed.loaded
 echo "Snapd is now ready."
 
 echo
