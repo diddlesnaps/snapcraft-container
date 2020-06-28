@@ -51,7 +51,7 @@ RUN apt-get update -qq && \
       systemctl enable snapd.socket && \
       systemctl enable docker-commandline
 
-COPY entrypoint.py retry.py /bin/
+COPY entrypoint.py /bin/
 
 VOLUME ["/run", "/run/lock"]
 STOPSIGNAL SIGRTMIN+3
