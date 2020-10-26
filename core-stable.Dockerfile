@@ -11,6 +11,7 @@ RUN apt-get update -qq && \
       apt-get dist-upgrade --yes && \
       apt-get install --yes -qq --no-install-recommends \
             fuse \
+			gnupg \
             python3 \
             snapd \
             sudo \
