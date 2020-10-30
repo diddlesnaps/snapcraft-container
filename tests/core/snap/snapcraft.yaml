@@ -1,0 +1,11 @@
+name: core-test
+version: '0.1'
+summary: Summary of the simple snap
+description: Description of the simple snap
+architectures: [all]
+confinement: strict
+base: core
+
+parts:
+  dummy-part:
+    plugin: nil
