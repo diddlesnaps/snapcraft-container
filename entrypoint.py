@@ -37,8 +37,16 @@ cd "{wd}"
 
 echo
 echo "Running user script: {commandline}"
-{commandline}
+set -x
+{commandline} || (
+    echo "User script Failed"
+    snap version
+    snap run snapcraft version
+    command -v snap
+    command -v snapcraft
+)
 
+set +x
 echo "Finished. The following messages are from systemd closing down, and may be ignored."
 /bin/systemctl exit $?
 """.format(wd=os.getcwd(), commandline=commandline))
