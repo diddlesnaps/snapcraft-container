@@ -5,8 +5,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
       container=docker \
       init=/lib/systemd/systemd
 
-COPY unitfiles/docker-commandline.service /etc/systemd/system/
-
 RUN apt-get update -qq && \
       apt-get dist-upgrade --yes && \
       apt-get install --yes -qq --no-install-recommends \
@@ -49,14 +47,13 @@ RUN apt-get update -qq && \
 	systemctl set-default basic.target && \
 # enable the services we care about
       systemctl enable snapd.service && \
-      systemctl enable snapd.socket && \
-      systemctl enable docker-commandline
+      systemctl enable snapd.socket
 
-COPY entrypoint.py /bin/
+COPY entrypoint.sh /bin/
 
 VOLUME ["/run", "/run/lock"]
 STOPSIGNAL SIGRTMIN+3
 
-ENTRYPOINT ["/bin/entrypoint.py"]
+ENTRYPOINT ["/bin/entrypoint.sh"]
 
 CMD ["snapcraft"]

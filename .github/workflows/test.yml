@@ -52,8 +52,11 @@ jobs:
       run: |
         echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json > /dev/null
         sudo systemctl restart docker
+        sudo mv /etc/apparmor.d/usr.lib.snapd.snap-confine.real /etc/apparmor.d/disable/
+        sudo apparmor_parser -R /etc/apparmor.d/disable/usr.lib.snapd.snap-confine.real
+        sudo apparmor_status
         docker run --rm --tty --privileged \
           --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
           --workdir "$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
           --platform "${{ matrix.platform }}" \
-          test-image env MY_VARIABLE="true" snapcraft
+          test-image snapcraft
