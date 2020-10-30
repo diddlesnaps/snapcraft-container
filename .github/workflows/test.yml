@@ -56,4 +56,4 @@ jobs:
           --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
           --workdir "$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
           --platform "${{ matrix.platform }}" \
-          test-image
+          test-image env MY_VARIABLE="true" snapcraft
