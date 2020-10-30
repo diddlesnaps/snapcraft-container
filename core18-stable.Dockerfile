@@ -59,4 +59,4 @@ STOPSIGNAL SIGRTMIN+3
 
 ENTRYPOINT ["/bin/entrypoint.py"]
 
-CMD ["snap", "run", "snapcraft"]
+CMD ["snapcraft"]

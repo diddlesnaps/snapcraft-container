@@ -6,11 +6,7 @@ import shlex
 import subprocess
 
 if __name__ == "__main__":
-    if sys.argv[1] == "snapcraft" or \
-        sys.argv[1] == "/snap/bin/snapcraft":
-        args = ["snap", "run", "snapcraft"] + sys.argv[2:]
-    else:
-        args = sys.argv[1:]
+    args = sys.argv[1:]
     commandline = " ".join([shlex.quote(a) for a in args])
     cmd = open("/docker-commandline.sh", "w")
     cmd.write("""#!/bin/bash
@@ -41,7 +37,7 @@ set -x
 {commandline} || (
     echo "User script Failed"
     snap version
-    snap run snapcraft version
+    snapcraft version
     command -v snap
     command -v snapcraft
 )
