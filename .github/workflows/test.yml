@@ -1,0 +1,59 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+    - '**'
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+        - linux/amd64
+        - linux/arm64
+        - linux/arm/v7
+        - linux/ppc64le
+        - linux/s390x
+        base:
+        - core
+        - core18
+        - core20
+        include:
+        - base: core
+          platform: linux/386
+        - base: core18
+          platform: linux/386
+        exclude:
+        - base: core
+          platform: linux/s390x
+        # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
+        - base: core20
+          platform: linux/arm/v7
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Build
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./${{ matrix.base }}-stable.Dockerfile
+        platforms: ${{ matrix.platform }}
+        tags: test-image
+        push: false
+        load: true
+    - name: Test
+      run: |
+        echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json > /dev/null
+        sudo systemctl restart docker
+        docker run --rm --tty --privileged \
+          --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
+          --workdir "$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
+          --platform "${{ matrix.platform }}" \
+          test-image

@@ -4,6 +4,10 @@ You may override the entrypoint with the `--entrypoint` parameter if you need to
 
 These container images require you to pass `--privileged`.
 
+Note
+----
+Currently there is an issue with the combination of Core20 and running this image through qemu emulating ARMv7, such as when running on GitHub Actions. See [the bug on Launchpad.net](https://bugs.launchpad.net/qemu/+bug/1886811) for the root cause.
+
 Running snapcraft
 -----------------
 
