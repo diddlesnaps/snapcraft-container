@@ -2,7 +2,9 @@ These container images start systemd and execute the command line passed on invo
 
 You may override the entrypoint with the `--entrypoint` parameter if you need to run the container without starting systemd. Or you may drop to a shell with systemd running by setting the command to `bash`.
 
-These container images require you to pass `--privileged`.
+These container images require you to pass `--privileged`, along with `--security-opt apparmor=":docker-snapcraft:unconfined"`.
+
+You also need to create a directory at `/sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft`. This will initialise an empty AppArmor namespace. Once you've finished you can `rmdir` that same directory (it _must_ be `rmdir`, because `rm -r` and `rm -rf` won't work)
 
 Note
 ----
@@ -14,25 +16,33 @@ Running snapcraft
 Running without specifying a command will run `snapcraft` without any parameters:
 
 ```bash
-docker run --rm -it --privileged -v $PWD:$PWD -w $PWD diddledan/snapcraft:core18
+sudo mkdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
+docker run --rm -it --privileged --security-opt apparmor=":docker-snapcraft:unconfined" -v $PWD:/data -w /data diddledan/snapcraft:core18
+sudo rmdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
 ```
 
 To run with parameters, specify `snapcraft [...params]` when creating the container:
 
 ```bash
-docker run --rm -it --privileged -v $PWD:$PWD -w $PWD diddledan/snapcraft:core18 snapcraft stage --enable-experimental-package-repositories
+sudo mkdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
+docker run --rm -it --privileged --security-opt apparmor=":docker-snapcraft:unconfined" -v $PWD:/data -w /data diddledan/snapcraft:core18 snapcraft stage --enable-experimental-package-repositories
+sudo rmdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
 ```
 
 Drop to a shell with systemd running
 ------------------------------------
 
 ```bash
-docker run --rm -it --privileged -v $PWD:$PWD -w $PWD diddledan/snapcraft:core18 bash
+sudo mkdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
+docker run --rm -it --privileged --security-opt apparmor=":docker-snapcraft:unconfined" -v $PWD:/data -w /data diddledan/snapcraft:core18 bash
+sudo rmdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
 ```
 
 Drop to a shell without starting systemd
 ----------------------------------------
 
 ```bash
-docker run --rm -it --privileged -v $PWD:$PWD -w $PWD --entrypoint bash diddledan/snapcraft:core18
+sudo mkdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
+docker run --rm -it --privileged --security-opt apparmor=":docker-snapcraft:unconfined" -v $PWD:/data -w /data --entrypoint bash diddledan/snapcraft:core18
+sudo rmdir /sys/kernel/security/apparmor/policy/namespaces/docker-snapcraft
 ```
