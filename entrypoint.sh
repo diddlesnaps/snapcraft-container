@@ -5,6 +5,12 @@ systemctl="$(command -v systemctl)"
 CMD="$1"
 shift
 
+case "$CMD" in
+    snapcraft|/snap/bin/snapcraft)
+        CMD="snap run snapcraft"
+        ;;
+esac
+
 if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
     USE_SNAPCRAFT_CHANNEL=latest/stable
 else
@@ -16,10 +22,13 @@ else
 fi
 
 cat > /usr/local/bin/docker_commandline.sh <<EOF
-#!/bin/bash -e
+#!/bin/bash
 $(export)
 declare -x PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-exec "$CMD" $@
+args="$(printf "%q " "$@")"
+echo "Executing: '$CMD $args'"
+$CMD $args
+/bin/systemctl exit $?
 EOF
 chmod +x /usr/local/bin/docker_commandline.sh
 
@@ -33,7 +42,6 @@ After=snapd.service snapd.socket snapd.seeded.service
 ExecStartPre=/bin/rm -f /.dockerenv /run/.containerenv
 ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
 ExecStart=/usr/local/bin/docker_commandline.sh
-ExecStopPost=$systemctl exit \$EXIT_STATUS
 Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
 Environment="LANG=C.UTF-8"
 Restart=no
