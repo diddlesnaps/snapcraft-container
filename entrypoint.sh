@@ -4,6 +4,7 @@ systemctl="$(command -v systemctl)"
 
 CMD="$1"
 shift
+args="$(printf "%q " "$@")"
 
 case "$CMD" in
     snapcraft|/snap/bin/snapcraft)
@@ -25,7 +26,6 @@ cat > /usr/local/bin/docker_commandline.sh <<EOF
 #!/bin/bash
 $(export)
 declare -x PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-args="$(printf "%q " "$@")"
 echo "Executing: '$CMD $args'"
 $CMD $args
 /bin/systemctl exit $?
