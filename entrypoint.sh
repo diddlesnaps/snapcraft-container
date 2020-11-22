@@ -4,7 +4,10 @@ systemctl="$(command -v systemctl)"
 
 CMD="$1"
 shift
-args="$(printf "%q " "$@")"
+args=""
+if [ $# -gt 0 ]; then
+    args="$(printf "%q " "$@")"
+fi
 
 case "$CMD" in
     snapcraft|/snap/bin/snapcraft)
