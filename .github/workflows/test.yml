@@ -1,9 +1,6 @@
 name: Build and Test
 
 on:
-  push:
-    branches:
-    - '**'
   pull_request:
 
 jobs:
@@ -60,8 +57,10 @@ jobs:
   test-build-snap:
     runs-on: ubuntu-latest
     needs: build
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
+        experimental: [false]
         channel:
         - latest/stable
         - latest/candidate
@@ -70,40 +69,47 @@ jobs:
         - linux/arm64
         - linux/arm/v7
         - linux/ppc64le
-        - linux/s390x
         base:
         - core
         - core18
         - core20
-
+        
         include:
         - base: core
           platform: linux/386
           channel: latest/stable
+          experimental: false
         - base: core
           platform: linux/386
           channel: latest/candidate
+          experimental: false
         - base: core18
           platform: linux/386
           channel: latest/stable
+          experimental: false
         - base: core18
           platform: linux/386
           channel: latest/candidate
+          experimental: false
+        - base: core18
+          platform: linux/s390x
+          channel: latest/candidate
+          experimental: true
+        - base: core20
+          platform: linux/s390x
+          channel: latest/stable
+          experimental: true
 
         exclude:
-        - base: core
-          platform: linux/s390x
-          channel: latest/stable
-        - base: core
-          platform: linux/s390x
-          channel: latest/candidate
         # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
         - base: core20
           platform: linux/arm/v7
           channel: latest/stable
+          experimental: false
         - base: core20
           platform: linux/arm/v7
           channel: latest/candidate
+          experimental: false
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -141,9 +147,10 @@ jobs:
   test-set-channel:
     runs-on: ubuntu-latest
     needs: build
-    continue-on-error: ${{ matrix.platform }} == "linux/s390x"
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
+        experimental: [false]
         channel:
         - latest/stable
         - latest/candidate
@@ -152,7 +159,6 @@ jobs:
         - linux/arm64
         - linux/arm/v7
         - linux/ppc64le
-        - linux/s390x
         base:
         - core
         - core18
@@ -162,30 +168,38 @@ jobs:
         - base: core
           platform: linux/386
           channel: latest/stable
+          experimental: false
         - base: core
           platform: linux/386
           channel: latest/candidate
+          experimental: false
         - base: core18
           platform: linux/386
           channel: latest/stable
+          experimental: false
         - base: core18
           platform: linux/386
           channel: latest/candidate
+          experimental: false
+        - base: core18
+          platform: linux/s390x
+          channel: latest/candidate
+          experimental: true
+        - base: core20
+          platform: linux/s390x
+          channel: latest/stable
+          experimental: true
 
         exclude:
-        - base: core
-          platform: linux/s390x
-          channel: latest/stable
-        - base: core
-          platform: linux/s390x
-          channel: latest/candidate
         # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
         - base: core20
           platform: linux/arm/v7
           channel: latest/stable
+          experimental: false
         - base: core20
           platform: linux/arm/v7
           channel: latest/candidate
+          experimental: false
     steps:
     - name: Checkout
       uses: actions/checkout@v2
