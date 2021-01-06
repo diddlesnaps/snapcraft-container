@@ -14,10 +14,13 @@ jobs:
       matrix:
         cfg:
         - base: core
+          base_os: xenial
           platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le
         - base: core18
+          base_os: bionic
           platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
         - base: core20
+          base_os: focal
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
     steps:
     - name: Checkout
@@ -35,7 +38,9 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./${{ matrix.cfg.base}}-stable.Dockerfile
+        file: ./Dockerfile
         platforms: ${{ matrix.cfg.platforms }}
         push: true
-        tags: diddledan/snapcraft:${{ matrix.cfg.base}}
+        tags: diddledan/snapcraft:${{ matrix.cfg.base }}
+        build-args: |
+          BASE_OS=${{ matrix.cfg.base_os }}
