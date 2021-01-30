@@ -1,6 +1,5 @@
-FROM ubuntu:${BASE_OS}
-
 ARG BASE_OS=xenial
+FROM ubuntu:${BASE_OS}
 
 # Set the proper environment.
 ENV DEBIAN_FRONTEND=noninteractive \
