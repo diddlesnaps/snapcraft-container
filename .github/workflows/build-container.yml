@@ -56,6 +56,6 @@ jobs:
         platforms: ${{ matrix.cfg.platforms }}
         push: true
         tags: diddledan/snapcraft:${{ matrix.cfg.base }}
-        labels: ${{ }}
+        labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           BASE_OS=${{ matrix.cfg.base_os }}
