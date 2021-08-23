@@ -57,7 +57,7 @@ jobs:
         file: ./Dockerfile
         platforms: ${{ matrix.cfg.platforms }}
         push: true
-        tags: diddledan/snapcraft:${{ matrix.cfg.base }}
+        tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           BASE_OS=${{ matrix.cfg.base_os }}
