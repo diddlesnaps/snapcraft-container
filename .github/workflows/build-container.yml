@@ -36,6 +36,7 @@ jobs:
           type=semver,pattern={{version}},prefix=${{ matrix.cfg.base }}-
           type=semver,pattern={{major}}.{{minor}},prefix=${{ matrix.cfg.base }}-
           type=sha,prefix=${{ matrix.cfg.base }}-
+          type=raw,value=${{ matrix.cfg.base }}
         labels: |
           org.opencontainers.image.title=Snapcraft for ${{ matrix.cfg.base }} builds
           org.opencontainers.image.description=Image of Snapcraft for building projects targeting the ${{ matrix.cfg.base }} base snap.
