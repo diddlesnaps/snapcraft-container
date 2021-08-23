@@ -16,7 +16,16 @@ case "$CMD" in
 esac
 
 if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
-    USE_SNAPCRAFT_CHANNEL=latest/stable
+    . /etc/lsb-release
+    case "$DISTRIB_CODENAME" in
+        xenial)
+            # core/xenial disabled in snapcraft 5+.
+            USE_SNAPCRAFT_CHANNEL="4.x/stable"
+            ;;
+        *)
+            USE_SNAPCRAFT_CHANNEL="latest/stable"
+            ;;
+    esac
 else
     case "$USE_SNAPCRAFT_CHANNEL" in
         stable|candidate|beta|edge)
