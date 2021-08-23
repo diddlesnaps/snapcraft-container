@@ -25,6 +25,20 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        tags: |
+          type=ref,event=branch,prefix=${{ matrix.cfg.base }}-
+          type=ref,event=pr,prefix=${{ matrix.cfg.base }}-
+          type=semver,pattern={{version}},prefix=${{ matrix.cfg.base }}-
+          type=semver,pattern={{major}}.{{minor}},prefix=${{ matrix.cfg.base }}-
+          type=sha,prefix=${{ matrix.cfg.base }}-
+        labels: |
+          org.opencontainers.image.title="Snapcraft for ${{ matrix.cfg.base }} builds"
+          org.opencontainers.image.description="Image of Snapcraft for building projects targeting the `${{ matrix.cfg.base }}` base snap."
+          org.opencontainers.image.authors="diddledani@ubuntu.com"
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
@@ -42,5 +56,6 @@ jobs:
         platforms: ${{ matrix.cfg.platforms }}
         push: true
         tags: diddledan/snapcraft:${{ matrix.cfg.base }}
+        labels: ${{ }}
         build-args: |
           BASE_OS=${{ matrix.cfg.base_os }}
