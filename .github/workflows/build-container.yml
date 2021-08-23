@@ -29,6 +29,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v3
       with:
+        images: diddledan/snapcraft
         tags: |
           type=ref,event=branch,prefix=${{ matrix.cfg.base }}-
           type=ref,event=pr,prefix=${{ matrix.cfg.base }}-
