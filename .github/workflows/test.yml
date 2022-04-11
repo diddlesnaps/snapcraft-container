@@ -129,7 +129,7 @@ jobs:
       id: load_image
       run: |
         echo ::set-output name=image_name::"$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -219,7 +219,7 @@ jobs:
       id: load_image
       run: |
         echo ::set-output name=image_name::"$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
