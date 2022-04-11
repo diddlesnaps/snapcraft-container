@@ -49,7 +49,7 @@ jobs:
       id: save_image
       run: |
         echo ::set-output name=image_name::"$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.save_image.outputs.image_name }}
         path: ./test-image.tar
