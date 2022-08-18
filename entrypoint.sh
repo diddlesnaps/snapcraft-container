@@ -55,6 +55,7 @@ ExecStartPre=/bin/rm -f /.dockerenv /run/.containerenv
 ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
 ExecStart=/usr/local/bin/docker_commandline.sh
 Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
+Environment="SNAPPY_LAUNCHER_INSIDE_TESTS=true"
 Environment="LANG=C.UTF-8"
 Restart=no
 Type=oneshot
@@ -68,4 +69,6 @@ WantedBy=default.target
 EOF
 
 "$systemctl" enable docker-exec.service
+
+mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
 exec /lib/systemd/systemd

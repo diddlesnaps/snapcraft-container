@@ -4,31 +4,61 @@ on:
   pull_request:
 
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      build_matrix: ${{ steps.matrix.outputs.build_matrix }}
+      test_matrix: ${{ steps.matrix.outputs.test_matrix }}
+    steps:
+    - name: Generate Build Matrix
+      id: matrix
+      run: |
+        PLATFORMS=(linux/386 linux/amd64 linux/arm/v7 linux/ppc64le linux/s390x)
+        BASES=(core core18 core20 core22)
+
+        BUILD_MATRIX=
+        TEST_MATRIX=
+
+        for platform in ${PLATFORMS[@]}; do
+          experimental=false
+          [ "$platform" = "linux/s390" ] && experimental=true
+          case $platform in
+            linux/386)
+              channel=5.x/stable
+              ;;
+            *)
+              channel=latest/candidate
+              ;;
+          esac
+          for base in ${BASES[@]}; do
+            [ "$platform" = "linux/386" ]    && [ "$base" != "core" ]  && [ "$base" != "core18" ] && continue
+            [ "$platform" = "linux/s390" ]   && [ "$base" = "core" ]   && continue 
+            [ "$platform" = "linux/s390" ]   && [ "$base" = "core18" ] && continue
+            # armv7 and core20 is broken
+            [ "$platform" = "linux/arm/v7" ] && [ "$base" = "core20" ] && continue
+            case $base in
+              core)
+                os=xenial; ;;
+              core18)
+                os=bionic; ;;
+              core20)
+                os=focal; ;;
+              core22)
+                os=jammy; ;;
+            esac
+            BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":$experimental}"
+            TEST_MATRIX="${TEST_MATRIX:+$TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\",\"experimental\":$experimental}"
+          done
+        done
+        echo "::echo::on"
+        echo "::set-output name=build_matrix::{\"include\":[$BUILD_MATRIX]}"
+        echo "::set-output name=test_matrix::{\"include\":[$TEST_MATRIX]}"
+      
   build:
     runs-on: ubuntu-latest
+    needs: generate-matrix
     strategy:
-      matrix:
-        platform:
-        - linux/amd64
-        - linux/arm64
-        - linux/arm/v7
-        - linux/ppc64le
-        - linux/s390x
-        base:
-        - core
-        - core18
-        - core20
-        include:
-        - base: core
-          platform: linux/386
-        - base: core18
-          platform: linux/386
-        exclude:
-        - base: core
-          platform: linux/s390x
-        # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
-        - base: core20
-          platform: linux/arm/v7
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.build_matrix) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -40,15 +70,17 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         context: .
-        file: ./${{ matrix.base }}-stable.Dockerfile
+        file: ./Dockerfile
         platforms: ${{ matrix.platform }}
         tags: test-image
         push: false
         outputs: type=docker,dest=test-image.tar
+        build-args:
+          BASE_OS=${{ matrix.base.os }}
     - name: Save container image
       id: save_image
       run: |
-        echo ::set-output name=image_name::"$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
+        echo ::set-output name=image_name::"$(echo "${{matrix.base.snap}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.save_image.outputs.image_name }}
@@ -56,60 +88,10 @@ jobs:
 
   test-build-snap:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
     strategy:
-      matrix:
-        experimental: [false]
-        channel:
-        - latest/stable
-        - latest/candidate
-        platform:
-        - linux/amd64
-        - linux/arm64
-        - linux/arm/v7
-        - linux/ppc64le
-        base:
-        - core
-        - core18
-        - core20
-        
-        include:
-        - base: core
-          platform: linux/386
-          channel: latest/stable
-          experimental: false
-        - base: core
-          platform: linux/386
-          channel: latest/candidate
-          experimental: false
-        - base: core18
-          platform: linux/386
-          channel: latest/stable
-          experimental: false
-        - base: core18
-          platform: linux/386
-          channel: latest/candidate
-          experimental: false
-        - base: core18
-          platform: linux/s390x
-          channel: latest/candidate
-          experimental: true
-        - base: core20
-          platform: linux/s390x
-          channel: latest/stable
-          experimental: true
-
-        exclude:
-        # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
-        - base: core20
-          platform: linux/arm/v7
-          channel: latest/stable
-          experimental: false
-        - base: core20
-          platform: linux/arm/v7
-          channel: latest/candidate
-          experimental: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.test_matrix) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -121,10 +103,6 @@ jobs:
       run: |
         echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json > /dev/null
         sudo systemctl restart docker
-    - name: Disable conflicting AppArmor rules
-      run: |
-        sudo mv /etc/apparmor.d/usr.lib.snapd.snap-confine.real /etc/apparmor.d/disable/
-        sudo apparmor_parser -R /etc/apparmor.d/disable/usr.lib.snapd.snap-confine.real
     - name: Load container image
       id: load_image
       run: |
@@ -138,68 +116,18 @@ jobs:
       run: |
         docker image load -i ./artifacts/test-image.tar
         docker run --rm --tty --privileged \
-          --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
-          --workdir "$GITHUB_WORKSPACE/tests/${{ matrix.base }}" \
+          --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"/data" \
+          --workdir "/data" \
           --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
           --platform "${{ matrix.platform }}" \
           test-image snapcraft
 
   test-set-channel:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
     strategy:
-      matrix:
-        experimental: [false]
-        channel:
-        - latest/stable
-        - latest/candidate
-        platform:
-        - linux/amd64
-        - linux/arm64
-        - linux/arm/v7
-        - linux/ppc64le
-        base:
-        - core
-        - core18
-        - core20
-        
-        include:
-        - base: core
-          platform: linux/386
-          channel: latest/stable
-          experimental: false
-        - base: core
-          platform: linux/386
-          channel: latest/candidate
-          experimental: false
-        - base: core18
-          platform: linux/386
-          channel: latest/stable
-          experimental: false
-        - base: core18
-          platform: linux/386
-          channel: latest/candidate
-          experimental: false
-        - base: core18
-          platform: linux/s390x
-          channel: latest/candidate
-          experimental: true
-        - base: core20
-          platform: linux/s390x
-          channel: latest/stable
-          experimental: true
-
-        exclude:
-        # ARMv7 is broken currently: https://bugs.launchpad.net/qemu/+bug/1886811
-        - base: core20
-          platform: linux/arm/v7
-          channel: latest/stable
-          experimental: false
-        - base: core20
-          platform: linux/arm/v7
-          channel: latest/candidate
-          experimental: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.test_matrix) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -211,10 +139,6 @@ jobs:
       run: |
         echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json > /dev/null
         sudo systemctl restart docker
-    - name: Disable conflicting AppArmor rules
-      run: |
-        sudo mv /etc/apparmor.d/usr.lib.snapd.snap-confine.real /etc/apparmor.d/disable/
-        sudo apparmor_parser -R /etc/apparmor.d/disable/usr.lib.snapd.snap-confine.real
     - name: Load container image
       id: load_image
       run: |
