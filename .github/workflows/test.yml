@@ -34,8 +34,6 @@ jobs:
             [ "$platform" = "linux/386" ]    && [ "$base" != "core" ]  && [ "$base" != "core18" ] && continue
             [ "$platform" = "linux/s390" ]   && [ "$base" = "core" ]   && continue 
             [ "$platform" = "linux/s390" ]   && [ "$base" = "core18" ] && continue
-            # armv7 and core20 is broken
-            [ "$platform" = "linux/arm/v7" ] && [ "$base" = "core20" ] && continue
             case $base in
               core)
                 os=xenial; ;;

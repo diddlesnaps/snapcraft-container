@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update -qq && \
       apt-get dist-upgrade --yes && \
       apt-get install --yes -qq --no-install-recommends \
+	  		build-essential \
             fuse \
 			gnupg \
             python3 \
@@ -20,6 +21,9 @@ RUN apt-get update -qq && \
       apt-get clean && \
       rm -rf /var/lib/apt/lists && \
       touch /var/lib/snapd/system-key && \
+# stop udevadm from working
+    dpkg-divert --local --rename --add /sbin/udevadm && \
+    ln -s /bin/true /sbin/udevadm && \
 # remove systemd 'wants' triggers
 	find \
 		/etc/systemd/system/*.wants/ \

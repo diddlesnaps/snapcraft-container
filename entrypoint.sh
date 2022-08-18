@@ -22,6 +22,10 @@ if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
             # core/xenial disabled in snapcraft 5+.
             USE_SNAPCRAFT_CHANNEL="4.x/stable"
             ;;
+        bionic)
+            # core18/bionic disabled in snapcraft 6+
+            USE_SNAPCRAFT_CHANNEL="5.x/stable"
+            ;;
         *)
             USE_SNAPCRAFT_CHANNEL="latest/stable"
             ;;
@@ -34,12 +38,19 @@ else
     esac
 fi
 
+if [ ! -e /var/lib/apt/lists ]; then
+    apt-get update
+fi
+
 cat > /usr/local/bin/docker_commandline.sh <<EOF
 #!/bin/bash
 $(export)
 declare -x PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 echo "Executing: '$CMD $args'"
 $CMD $args
+if [ -d "/root/.cache/snapcraft/log" ]; then
+    find /root/.cache/snapcraft/log -type f -name "*.log" | head -n1 | xargs cat
+fi
 /bin/systemctl exit $?
 EOF
 chmod +x /usr/local/bin/docker_commandline.sh
