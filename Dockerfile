@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
       container=docker \
       init=/lib/systemd/systemd
 
+
 RUN apt-get update -qq && \
       apt-get dist-upgrade --yes && \
       apt-get install --yes -qq --no-install-recommends \
@@ -50,7 +51,8 @@ RUN apt-get update -qq && \
       systemctl enable snapd.service && \
       systemctl enable snapd.socket
 
-COPY entrypoint.sh /bin/
+ADD entrypoint.sh /bin/
+ADD systemd-detect-virt /usr/bin/
 
 VOLUME ["/run", "/run/lock"]
 STOPSIGNAL SIGRTMIN+3

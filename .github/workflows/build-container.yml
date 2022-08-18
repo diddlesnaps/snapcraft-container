@@ -22,6 +22,9 @@ jobs:
         - base: core20
           base_os: focal
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
+        - base: core22
+          base_os: jammy
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x
     steps:
     - name: Checkout
       uses: actions/checkout@v3

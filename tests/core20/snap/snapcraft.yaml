@@ -2,9 +2,9 @@ name: core20-test
 version: '0.1'
 summary: Summary of the simple snap
 description: Description of the simple snap
-architectures: [all]
 confinement: strict
 base: core20
+grade: devel
 
 parts:
   dummy-part:
