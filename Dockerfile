@@ -1,11 +1,50 @@
 ARG BASE_OS=xenial
+
+FROM ubuntu:xenial as snapd
+ENV DEBIAN_FRONTEND=noninteractive \
+	LDFLAGS=-static
+
+RUN apt-get update -qq && \
+      apt-get dist-upgrade --yes && \
+      apt-get install --yes -qq --no-install-recommends \
+			fuse \
+			gnupg \
+            python3 \
+            snapd \
+            sudo \
+            systemd \
+	  		build-essential \
+	  		git \
+			help2man \
+			zlib1g-dev \
+			liblz4-dev \
+			liblzma-dev \
+			liblzo2-dev \
+	  && \
+	  git clone https://github.com/plougher/squashfs-tools.git && \
+	  cd squashfs-tools && \
+	  git checkout 4.5.1 && \
+	  sed -Ei 's/#(XZ_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
+      sed -Ei 's/#(LZO_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
+      sed -Ei 's/#(LZ4_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
+      sed -Ei 's|(INSTALL_PREFIX = ).*|\1 /usr|' squashfs-tools/Makefile && \
+      sed -Ei 's/\$\(INSTALL_DIR\)/$(DESTDIR)$(INSTALL_DIR)/g' squashfs-tools/Makefile && \
+	  cd squashfs-tools && \
+	  make -j$(nproc) && \
+	  make install && \
+	  mkdir -p /snap/snapd/current && \
+	  snap download snapd && \
+	  unsquashfs -f -d /snap/snapd/current snapd_*.snap && \
+	  cp /usr/bin/mksquashfs /snap/snapd/current/usr/bin && \
+	  cp /usr/bin/unsquashfs /snap/snapd/current/usr/bin && \
+	  mksquashfs /snap/snapd/current /snapd.snap
+
 FROM ubuntu:${BASE_OS}
 
 # Set the proper environment.
 ENV DEBIAN_FRONTEND=noninteractive \
       container=docker \
       init=/lib/systemd/systemd
-
 
 RUN apt-get update -qq && \
       apt-get dist-upgrade --yes && \
@@ -51,6 +90,7 @@ RUN apt-get update -qq && \
       systemctl enable snapd.service && \
       systemctl enable snapd.socket
 
+COPY --from=snapd /snapd.snap /snapd.snap
 ADD entrypoint.sh /bin/
 ADD systemd-detect-virt /usr/bin/
 
