@@ -52,6 +52,7 @@ After=snapd.service snapd.socket snapd.seeded.service
 
 [Service]
 ExecStartPre=/bin/rm -f /.dockerenv /run/.containerenv
+ExecStartPre=/usr/bin/snap install /snapd.snap --dangerous
 ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
 ExecStart=/usr/local/bin/docker_commandline.sh
 Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
