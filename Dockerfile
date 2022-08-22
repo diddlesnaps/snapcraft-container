@@ -59,6 +59,9 @@ RUN apt-get update -qq && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists && \
 	touch /var/lib/snapd/system-key && \
+# stop udevadm from working
+  dpkg-divert --local --rename --add /sbin/udevadm && \
+  ln -s /bin/true /sbin/udevadm && \
 # remove systemd 'wants' triggers
 	rm -f \
 		/etc/systemd/system/*.wants/* \

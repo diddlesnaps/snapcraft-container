@@ -1,5 +1,7 @@
 These container images start systemd and execute the command line passed on invokation. The commandline is executed as an interactive systemd service unit.
 
+*IMPORTANT* These container images are *NOT* compatible with Docker provided through the Snap Store due to confinement rules applied to the dockerd interfering with (preventing) our container's execution.
+
 You may override the entrypoint with the `--entrypoint` parameter if you need to run the container without starting systemd. Or you may drop to a shell with systemd running by setting the command to `bash`.
 
 These container images require you to pass `--privileged`.

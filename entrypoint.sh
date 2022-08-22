@@ -38,12 +38,19 @@ else
     esac
 fi
 
+if [ ! -e /var/lib/apt/lists ]; then
+    apt-get update
+fi
+
 cat > /usr/local/bin/docker_commandline.sh <<EOF
 #!/bin/bash
 $(export)
 declare -x PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 echo "Executing: '$CMD $args'"
 $CMD $args
+if [ -d "/root/.cache/snapcraft/log" ]; then
+    find /root/.cache/snapcraft/log -type f -name "*.log" | head -n1 | xargs cat
+fi
 /bin/systemctl exit $?
 EOF
 chmod +x /usr/local/bin/docker_commandline.sh
