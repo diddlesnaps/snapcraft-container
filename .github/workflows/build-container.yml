@@ -11,7 +11,7 @@ on:
 jobs:
   build-image:
     runs-on: ubuntu-latest
-    name: Build Container Image
+    name: Build ${{ matrix.base }} Image
     strategy:
       matrix:
         cfg:
