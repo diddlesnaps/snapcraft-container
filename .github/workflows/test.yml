@@ -153,10 +153,12 @@ jobs:
       run: |
         docker image load -i ./artifacts/test-image.tar
         
-          docker run --rm --tty --privileged \
-            --platform "${{ matrix.platform }}" \
-            --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
-            test-image snap info snapcraft --color=never &> output.txt
+        echo ::group
+        docker run --rm --tty --privileged \
+          --platform "${{ matrix.platform }}" \
+          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
+          test-image snap info snapcraft --color=never 2>&1 | tee output.txt
+        echo ::endgroup
             
         CHANNEL="$(cat output.txt | \
           tr '\r\n' '\n' | \
@@ -164,9 +166,5 @@ jobs:
         )"
         
         echo "Snapcraft channel in use: $CHANNEL"
-
-        echo ::group
-        cat output.txt
-        echo ::endgroup
 
         [ -n "$CHANNEL" ] && [ "$CHANNEL" = "${{ matrix.channel }}" ]
