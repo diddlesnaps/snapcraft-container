@@ -117,10 +117,10 @@ jobs:
       run: |
         docker image load -i ./artifacts/test-image.tar
         docker run --rm --tty --privileged \
+          --platform "${{ matrix.platform }}" \
+          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
           --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"/data" \
           --workdir "/data" \
-          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
-          --platform "${{ matrix.platform }}" \
           test-image snapcraft
 
   test-set-channel:
