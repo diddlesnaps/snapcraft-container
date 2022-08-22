@@ -22,27 +22,28 @@ jobs:
         for platform in ${PLATFORMS[@]}; do
           experimental=false
           [ "$platform" = "linux/s390" ] && experimental=true
-          case $platform in
-            linux/386)
-              channel=5.x/stable
-              ;;
-            *)
-              channel=latest/candidate
-              ;;
-          esac
           for base in ${BASES[@]}; do
-            [ "$platform" = "linux/386" ]    && [ "$base" != "core" ]  && [ "$base" != "core18" ] && continue
-            [ "$platform" = "linux/s390" ]   && [ "$base" = "core" ]   && continue 
-            [ "$platform" = "linux/s390" ]   && [ "$base" = "core18" ] && continue
+            [ "$platform" = "linux/386"  ] &&   [ "$base" != "core" ] && [ "$base" != "core18" ]   && continue
+            [ "$platform" = "linux/s390" ] && ( [ "$base"  = "core" ] || [ "$base"  = "core18" ] ) && continue
+
+            channel=latest/candidate
+
             case $base in
               core)
-                os=xenial; ;;
+                os=xenial
+                channel=4.x/stable
+                experimenal=true
+                ;;
               core18)
-                os=bionic; ;;
+                os=bionic
+                channel=5.x/stable
+                ;;
               core20)
-                os=focal; ;;
+                os=focal
+                ;;
               core22)
-                os=jammy; ;;
+                os=jammy
+                ;;
             esac
             BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":$experimental}"
             TEST_MATRIX="${TEST_MATRIX:+$TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\",\"experimental\":$experimental}"
