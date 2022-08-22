@@ -9,8 +9,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  core:
+  build-image:
     runs-on: ubuntu-latest
+    name: Build Container Image
     strategy:
       matrix:
         cfg:
