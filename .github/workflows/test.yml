@@ -22,27 +22,28 @@ jobs:
         for platform in ${PLATFORMS[@]}; do
           experimental=false
           [ "$platform" = "linux/s390" ] && experimental=true
-          case $platform in
-            linux/386)
-              channel=5.x/stable
-              ;;
-            *)
-              channel=latest/candidate
-              ;;
-          esac
           for base in ${BASES[@]}; do
-            [ "$platform" = "linux/386" ]    && [ "$base" != "core" ]  && [ "$base" != "core18" ] && continue
-            [ "$platform" = "linux/s390" ]   && [ "$base" = "core" ]   && continue 
-            [ "$platform" = "linux/s390" ]   && [ "$base" = "core18" ] && continue
+            [ "$platform" = "linux/386"  ] &&   [ "$base" != "core" ] && [ "$base" != "core18" ]   && continue
+            [ "$platform" = "linux/s390" ] && ( [ "$base"  = "core" ] || [ "$base"  = "core18" ] ) && continue
+
+            channel=latest/candidate
+
             case $base in
               core)
-                os=xenial; ;;
+                os=xenial
+                channel=4.x/stable
+                experimenal=true
+                ;;
               core18)
-                os=bionic; ;;
+                os=bionic
+                channel=5.x/stable
+                ;;
               core20)
-                os=focal; ;;
+                os=focal
+                ;;
               core22)
-                os=jammy; ;;
+                os=jammy
+                ;;
             esac
             BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":$experimental}"
             TEST_MATRIX="${TEST_MATRIX:+$TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\",\"experimental\":$experimental}"
@@ -53,6 +54,7 @@ jobs:
         echo "::set-output name=test_matrix::{\"include\":[$TEST_MATRIX]}"
       
   build:
+    name: Build PR
     runs-on: ubuntu-latest
     needs: generate-matrix
     strategy:
@@ -85,6 +87,7 @@ jobs:
         path: ./test-image.tar
 
   test-build-snap:
+    name: Test Build Snap
     runs-on: ubuntu-latest
     needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
@@ -114,13 +117,14 @@ jobs:
       run: |
         docker image load -i ./artifacts/test-image.tar
         docker run --rm --tty --privileged \
+          --platform "${{ matrix.platform }}" \
+          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
           --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"/data" \
           --workdir "/data" \
-          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
-          --platform "${{ matrix.platform }}" \
           test-image snapcraft
 
   test-set-channel:
+    name: Test Set Channel
     runs-on: ubuntu-latest
     needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
@@ -149,10 +153,12 @@ jobs:
       run: |
         docker image load -i ./artifacts/test-image.tar
         
-          docker run --rm --tty --privileged \
-            --platform "${{ matrix.platform }}" \
-            --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
-            test-image snap info snapcraft --color=never &> output.txt
+        echo ::group
+        docker run --rm --tty --privileged \
+          --platform "${{ matrix.platform }}" \
+          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
+          test-image snap info snapcraft --color=never 2>&1 | tee output.txt
+        echo ::endgroup
             
         CHANNEL="$(cat output.txt | \
           tr '\r\n' '\n' | \
@@ -160,9 +166,5 @@ jobs:
         )"
         
         echo "Snapcraft channel in use: $CHANNEL"
-
-        echo ::group
-        cat output.txt
-        echo ::endgroup
 
         [ -n "$CHANNEL" ] && [ "$CHANNEL" = "${{ matrix.channel }}" ]

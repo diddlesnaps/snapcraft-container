@@ -1,4 +1,4 @@
-tests/*/parts
-tests/*/stage
-tests/*/prime
-tests/*/*.snap
+**/parts
+**/stage
+**/prime
+*.snap

@@ -15,15 +15,15 @@ case "$CMD" in
         ;;
 esac
 
+. /etc/lsb-release
 if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
-    . /etc/lsb-release
     case "$DISTRIB_CODENAME" in
         xenial)
             # core/xenial disabled in snapcraft 5+.
             USE_SNAPCRAFT_CHANNEL="4.x/stable"
             ;;
         bionic)
-            # core18/bionic disabled in snapcraft 6+
+            # core18/bionic disabled in snapcraft 6+.
             USE_SNAPCRAFT_CHANNEL="5.x/stable"
             ;;
         *)
@@ -62,7 +62,7 @@ Wants=snapd.seeded.service
 After=snapd.service snapd.socket snapd.seeded.service
 
 [Service]
-ExecStartPre=/bin/rm -f /.dockerenv /run/.containerenv
+ExecStartPre=/usr/bin/snap install /snapd.snap --dangerous
 ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
 ExecStart=/usr/local/bin/docker_commandline.sh
 Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
@@ -81,5 +81,24 @@ EOF
 
 "$systemctl" enable docker-exec.service
 
+if [ "$DISTRIB_CODENAME" = "xenial" ]; then
+    if grep -q cgroup2 /proc/mounts; then
+        echo "This container is incompatible with cgroups2. Refusing to continue."
+        echo "You can try re-running this container with '--tmpfs /sys/fs/cgroup' as a possible workaround."
+        echo "The workaround may not work on all systems."
+        exit 1
+    fi
+    mkdir /sys/fs/cgroup/systemd
+    mount -t cgroup cgroup -o none,name=systemd,xattr /sys/fs/cgroup/systemd
+fi
+
+if [ -f /.dockerenv ]; then
+    rm -f /.dockerenv
+fi
+if [ -f /run/.containerenv ]; then
+    umount /run/.containerenv
+    rm -f /run/.containerenv
+fi
+
 mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
-exec /lib/systemd/systemd
+exec /lib/systemd/systemd --system --system-unit docker-exec.service
