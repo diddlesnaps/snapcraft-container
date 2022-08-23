@@ -49,6 +49,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update -qq && \
 	apt-get dist-upgrade --yes && \
 	apt-get install --yes -qq --no-install-recommends \
+		build-essential \
 		fuse \
 		gnupg \
 		python3 \
