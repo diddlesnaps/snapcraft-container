@@ -85,7 +85,7 @@ if [ "$DISTRIB_CODENAME" = "xenial" ]; then
     if grep -q cgroup2 /proc/mounts; then
         echo "This container is incompatible with cgroups2. Refusing to continue."
         echo "You can try re-running this container with '--tmpfs /sys/fs/cgroup' as a possible workaround."
-        echo "The workaround may not work on all systems."
+        echo "The workaround may not work on all systems, and will screw up the hosts' cgroups until a reboot of the system."
         exit 1
     fi
     mkdir /sys/fs/cgroup/systemd
@@ -100,5 +100,7 @@ if [ -f /run/.containerenv ]; then
     rm -f /run/.containerenv
 fi
 
-mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
+if grep -q securityfs /proc/filesystems; then
+    mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
+fi
 exec /lib/systemd/systemd --system --system-unit docker-exec.service
