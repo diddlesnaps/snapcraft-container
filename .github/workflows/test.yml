@@ -168,3 +168,45 @@ jobs:
         echo "Snapcraft channel in use: $CHANNEL"
 
         [ -n "$CHANNEL" ] && [ "$CHANNEL" = "${{ matrix.channel }}" ]
+
+  test-failure:
+    name: Test Failures (expected)
+    runs-on: ubuntu-latest
+    needs: [ generate-matrix, build ]
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.test_matrix) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Enable Docker experimental
+      run: |
+        echo '{"experimental": true}' | sudo tee /etc/docker/daemon.json > /dev/null
+        sudo systemctl restart docker
+    - name: Load container image
+      id: load_image
+      run: |
+        echo ::set-output name=image_name::"$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')"
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ steps.load_image.outputs.image_name }}
+        path: ./artifacts
+    - name: Test failure to build a Snap
+      id: build
+      run: |
+        docker image load -i ./artifacts/test-image.tar
+        sed -Ei 's/command: bin\/hello/command: bin\/does-not-exist/' tests/${{ matrix.base }}/snap/snapcraft.yaml
+        if docker run --rm --tty --privileged \
+          --platform "${{ matrix.platform }}" \
+          --env USE_SNAPCRAFT_CHANNEL="${{ matrix.channel }}" \
+          --volume "$GITHUB_WORKSPACE/tests/${{ matrix.base }}":"/data" \
+          --workdir "/data" \
+          test-image snapcraft
+        then
+          echo "Snapcraft build should have failed"
+          exit 1
+        fi
