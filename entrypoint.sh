@@ -12,6 +12,7 @@ fi
 case "$CMD" in
     snapcraft|/snap/bin/snapcraft)
         CMD="snap run snapcraft"
+        stdin_mode=null
         ;;
 esac
 
@@ -28,6 +29,13 @@ if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
             ;;
         *)
             USE_SNAPCRAFT_CHANNEL="latest/stable"
+            # Temporary workaround until snapcraft releases
+            # with commit 010fd70 included.
+            if [ -z "$args" ]; then
+                args="--verbosity=verbose"
+            elif [ -n "${args##*"--verbosity"*}" ]; then
+                args="--verbosity=verbose $args"
+            fi
             ;;
     esac
 else
@@ -66,6 +74,8 @@ After=snapd.service snapd.socket snapd.seeded.service
 ExecStartPre=/usr/bin/snap install /snapd.snap --dangerous
 ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
 ExecStart=/usr/local/bin/docker_commandline.sh
+Environment="SNAPCRAFT_MANAGED_MODE=y"
+Environment="SNAPCRAFT_VERBOSITY_LEVEL=verbose"
 Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
 Environment="SNAPPY_LAUNCHER_INSIDE_TESTS=true"
 Environment="LANG=C.UTF-8"
