@@ -31,10 +31,12 @@ if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
             USE_SNAPCRAFT_CHANNEL="latest/stable"
             # Temporary workaround until snapcraft releases
             # with commit 010fd70 included.
-            if [ -z "$args" ]; then
-                args="--verbosity=verbose"
-            elif [ -n "${args##*"--verbosity"*}" ]; then
-                args="--verbosity=verbose $args"
+            if [ "$CMD" = "snap run snapcraft" ]; then
+                if [ -z "$args" ]; then
+                    args="--verbosity=verbose"
+                elif [ -n "${args##*"--verbosity"*}" ]; then
+                    args="--verbosity=verbose $args"
+                fi
             fi
             ;;
     esac
@@ -52,15 +54,21 @@ fi
 
 cat > /usr/local/bin/docker_commandline.sh <<EOF
 #!/bin/bash
-$(export)
-declare -x PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# Default environment variables
+export SNAPCRAFT_VERBOSITY_LEVEL=verbose
+
+# Recreate the initial environment from docker run
+$(export -p)
+
+# Force these environment variables
+export PATH="/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export SNAPCRAFT_BUILD_ENVIRONMENT=host
+export SNAPCRAFT_MANAGED_MODE=y
+
+# Run the command
 echo "Executing: '$CMD $args'"
 $CMD $args
-CMD_EXIT_STATUS=\$?
-if [ -d "/root/.cache/snapcraft/log" ]; then
-    find /root/.cache/snapcraft/log -type f -name "*.log" | head -n1 | xargs cat
-fi
-/bin/systemctl exit \$CMD_EXIT_STATUS
+/bin/systemctl exit \$?
 EOF
 chmod +x /usr/local/bin/docker_commandline.sh
 
@@ -71,12 +79,9 @@ Wants=snapd.seeded.service
 After=snapd.service snapd.socket snapd.seeded.service
 
 [Service]
-ExecStartPre=/usr/bin/snap install /snapd.snap --dangerous
-ExecStartPre=/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL
+ExecStartPre=bash -c '/usr/bin/snap install /snapd.snap --dangerous < /dev/null'
+ExecStartPre=bash -c '/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL < /dev/null'
 ExecStart=/usr/local/bin/docker_commandline.sh
-Environment="SNAPCRAFT_MANAGED_MODE=y"
-Environment="SNAPCRAFT_VERBOSITY_LEVEL=verbose"
-Environment="SNAPCRAFT_BUILD_ENVIRONMENT=host"
 Environment="SNAPPY_LAUNCHER_INSIDE_TESTS=true"
 Environment="LANG=C.UTF-8"
 Restart=no
@@ -103,6 +108,8 @@ if [ "$DISTRIB_CODENAME" = "xenial" ]; then
     mount -t cgroup cgroup -o none,name=systemd,xattr /sys/fs/cgroup/systemd
 fi
 
+# The presence of either .dockerenv or /run/.containerenv cause snapcraft to
+# incorrectly stage more than it should (e.g. libc and systemd). Remove them.
 if [ -f /.dockerenv ]; then
     rm -f /.dockerenv
 fi
@@ -114,4 +121,7 @@ fi
 if grep -q securityfs /proc/filesystems; then
     mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
 fi
+mount -t tmpfs tmpfs /tmp
+mount -t tmpfs tmpfs /run
+mount -t tmpfs tmpfs /run/lock
 exec /lib/systemd/systemd --system --system-unit docker-exec.service
