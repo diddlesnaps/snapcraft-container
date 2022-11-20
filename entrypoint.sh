@@ -79,8 +79,8 @@ Wants=snapd.seeded.service
 After=snapd.service snapd.socket snapd.seeded.service
 
 [Service]
-ExecStartPre=bash -c '/usr/bin/snap install /snapd.snap --dangerous < /dev/null'
-ExecStartPre=bash -c '/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL < /dev/null'
+ExecStartPre=/bin/bash -c '/usr/bin/snap install /snapd.snap --dangerous < /dev/null'
+ExecStartPre=/bin/bash -c '/usr/bin/snap install snapcraft --classic --channel $USE_SNAPCRAFT_CHANNEL < /dev/null'
 ExecStart=/usr/local/bin/docker_commandline.sh
 Environment="SNAPPY_LAUNCHER_INSIDE_TESTS=true"
 Environment="LANG=C.UTF-8"
