@@ -21,25 +21,44 @@ Running snapcraft
 Running without specifying a command will run `snapcraft` without any parameters:
 
 ```bash
-docker run --rm -it --privileged -v $PWD:/data -w /data diddledan/snapcraft:core22
+docker run --rm -it --privileged -v $PWD:/data -w /data diddledani/snapcraft:core22
 ```
 
 To run with parameters, specify `snapcraft [...params]` when creating the container:
 
 ```bash
-docker run --rm -it --privileged -v $PWD:/data -w /data diddledan/snapcraft:core22 snapcraft stage --enable-experimental-package-repositories
+docker run --rm -it --privileged -v $PWD:/data -w /data diddledani/snapcraft:core22 snapcraft stage --enable-experimental-package-repositories
 ```
 
 Drop to a shell with systemd running
 ------------------------------------
 
 ```bash
-docker run --rm -it --privileged -v $PWD:/data -w /data diddledan/snapcraft:core22 bash
+docker run --rm -it --privileged -v $PWD:/data -w /data diddledani/snapcraft:core22 bash
 ```
 
 Drop to a shell without starting systemd
 ----------------------------------------
 
 ```bash
-docker run --rm -it --privileged -v $PWD:/data -w /data --entrypoint bash diddledan/snapcraft:core22
+docker run --rm -it --privileged -v $PWD:/data -w /data --entrypoint bash diddledani/snapcraft:core22
 ```
+
+*Experimental* support for running through Podman
+-------------------------------------------------
+
+These containers _should_ now be compatible with Podman, but have
+yet to receive much in the way of testing and validation. With the
+proviso that this is highly experimental for these images, you can
+try to run the build through Podman with:
+
+```bash
+sudo podman run --rm -it --privileged --systemd always -v $PWD:/data -w /data docker.io/diddledani/snapcraft:core22
+```
+
+Running through `sudo` seems to be a requirement to allow mounting
+squashfs filesystems, and we still need `--privileged` the same as
+when we are running through Docker. We also need to add the
+`--systemd always` flag to get Podman to set up the runtime
+environment appropriately for running Systemd inside the new
+container instance.
