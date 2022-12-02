@@ -23,12 +23,14 @@ jobs:
 
         for base in ${BASES[@]}; do
           channel=latest/stable
+          runner=ubuntu-latest
 
           case $base in
             core)
               os=xenial
               channel=4.x/stable
               experimenal=true
+              runner=ubuntu-20.04
               ;;
             core18)
               os=bionic
@@ -50,10 +52,10 @@ jobs:
             [ "$platform" = "linux/s390" ] && experimental=true
 
             BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":$experimental}"
-            DOCKER_TEST_MATRIX="${DOCKER_TEST_MATRIX:+$DOCKER_TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\",\"experimental\":$experimental}"
+            DOCKER_TEST_MATRIX="${DOCKER_TEST_MATRIX:+$DOCKER_TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\","runner":"$runner",\"experimental\":$experimental}"
           done
 
-          PODMAN_TEST_MATRIX="${PODMAN_TEST_MATRIX:+$PODMAN_TEST_MATRIX,}{\"channel\":\"$channel\",\"base\":\"$base\",\"platform\":\"linux/amd64\"}"
+          PODMAN_TEST_MATRIX="${PODMAN_TEST_MATRIX:+$PODMAN_TEST_MATRIX,}{\"platform\":\"linux/amd64\",\"channel\":\"$channel\",\"base\":\"$base\","runner":"$runner"}"
         done
 
         echo "build_matrix={\"include\":[$BUILD_MATRIX]}" >> $GITHUB_OUTPUT
@@ -95,7 +97,7 @@ jobs:
 
   test-build-snap-docker:
     name: Test Build Snap with Docker
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -132,7 +134,7 @@ jobs:
 
   test-build-snap-podman:
     name: Test Build Snap with Podman
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: true
     strategy:
@@ -160,7 +162,7 @@ jobs:
 
   test-set-channel-docker:
     name: Test Set Channel with Docker
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -208,7 +210,7 @@ jobs:
 
   test-set-channel-podman:
     name: Test Set Channel with Podman
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: true
     strategy:
@@ -247,7 +249,7 @@ jobs:
 
   test-failure-docker:
     name: Test Failures with Docker (expected)
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -289,7 +291,7 @@ jobs:
 
   test-failure-podman:
     name: Test Failures with Podman (expected)
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
     needs: [ generate-matrix, build ]
     continue-on-error: true
     strategy:
