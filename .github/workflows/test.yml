@@ -51,11 +51,11 @@ jobs:
             experimental=false
             [ "$platform" = "linux/s390" ] && experimental=true
 
-            BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":$experimental}"
-            DOCKER_TEST_MATRIX="${DOCKER_TEST_MATRIX:+$DOCKER_TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\","runner":"$runner",\"experimental\":$experimental}"
+            BUILD_MATRIX="${BUILD_MATRIX:+$BUILD_MATRIX,}{\"platform\":\"$platform\",\"base\":{\"snap\":\"$base\",\"os\":\"$os\"},\"experimental\":\"$experimental\"}"
+            DOCKER_TEST_MATRIX="${DOCKER_TEST_MATRIX:+$DOCKER_TEST_MATRIX,}{\"platform\":\"$platform\",\"channel\":\"$channel\",\"base\":\"$base\",\"runner\":\"$runner\",\"experimental\":$experimental}"
           done
 
-          PODMAN_TEST_MATRIX="${PODMAN_TEST_MATRIX:+$PODMAN_TEST_MATRIX,}{\"platform\":\"linux/amd64\",\"channel\":\"$channel\",\"base\":\"$base\","runner":"$runner"}"
+          PODMAN_TEST_MATRIX="${PODMAN_TEST_MATRIX:+$PODMAN_TEST_MATRIX,}{\"platform\":\"linux/amd64\",\"channel\":\"$channel\",\"base\":\"$base\",\"runner\":\"$runner\"}"
         done
 
         echo "build_matrix={\"include\":[$BUILD_MATRIX]}" >> $GITHUB_OUTPUT
