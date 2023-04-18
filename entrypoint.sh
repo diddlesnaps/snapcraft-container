@@ -29,15 +29,6 @@ if [ -z "$USE_SNAPCRAFT_CHANNEL" ]; then
             ;;
         *)
             USE_SNAPCRAFT_CHANNEL="latest/stable"
-            # Temporary workaround until snapcraft releases
-            # with commit 010fd70 included.
-            if [ "$CMD" = "snap run snapcraft" ]; then
-                if [ -z "$args" ]; then
-                    args="--verbosity=verbose"
-                elif [ -n "${args##*"--verbosity"*}" ]; then
-                    args="--verbosity=verbose $args"
-                fi
-            fi
             ;;
     esac
 else
