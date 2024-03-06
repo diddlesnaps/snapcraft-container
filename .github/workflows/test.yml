@@ -70,7 +70,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.build_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -104,7 +104,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.docker_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -141,7 +141,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.podman_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Load container image
       id: load_image
       run: |
@@ -169,7 +169,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.docker_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -217,7 +217,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.podman_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Load container image
       id: load_image
       run: |
@@ -256,7 +256,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.docker_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -298,7 +298,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.podman_test_matrix) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Load container image
       id: load_image
       run: |
