@@ -90,7 +90,7 @@ jobs:
       id: save_image
       run: |
         echo image_name="$(echo "${{matrix.base.snap}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.save_image.outputs.image_name }}
         path: ./test-image.tar
@@ -117,7 +117,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -146,7 +146,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -182,7 +182,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -222,7 +222,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -269,7 +269,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
@@ -303,7 +303,7 @@ jobs:
       id: load_image
       run: |
         echo image_name="$(echo "${{matrix.base}}-${{matrix.platform}}.tar" | sed 's|/|_|g')" >> $GITHUB_OUTPUT
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ steps.load_image.outputs.image_name }}
         path: ./artifacts
