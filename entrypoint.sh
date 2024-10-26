@@ -113,5 +113,6 @@ if grep -q securityfs /proc/filesystems; then
     mount -o rw,nosuid,nodev,noexec,relatime securityfs -t securityfs /sys/kernel/security
 fi
 mount -t tmpfs tmpfs /run
+mkdir -p /run/lock
 mount -t tmpfs tmpfs /run/lock
 exec /lib/systemd/systemd --system --system-unit docker-exec.service

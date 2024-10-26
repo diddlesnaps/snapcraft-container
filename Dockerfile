@@ -30,11 +30,10 @@ RUN apt-get update -qq && \
 # Fetch and compile squashfs-tools
 RUN git clone https://github.com/plougher/squashfs-tools.git
 RUN cd squashfs-tools && \
-	git checkout 4.5.1 && \
+	git checkout 4.6.1 && \
 	sed -Ei 's/#(XZ_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
 	sed -Ei 's/#(LZO_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
 	sed -Ei 's/#(LZ4_SUPPORT.*)/\1/' squashfs-tools/Makefile && \
-	sed -Ei 's|(INSTALL_PREFIX = ).*|\1 /usr|' squashfs-tools/Makefile && \
 	sed -Ei 's/\$\(INSTALL_DIR\)/$(DESTDIR)$(INSTALL_DIR)/g' squashfs-tools/Makefile && \
 	cd squashfs-tools && \
 	make -j$(nproc) && \
@@ -46,8 +45,8 @@ RUN snap download snapd
 RUN unsquashfs -f -d /snap/snapd/current snapd_*.snap
 
 # Replace mksquashfs and unsqusahfs with our own
-RUN cp /usr/bin/mksquashfs /snap/snapd/current/usr/bin
-RUN cp /usr/bin/unsquashfs /snap/snapd/current/usr/bin
+RUN cp /usr/local/bin/mksquashfs /snap/snapd/current/usr/bin
+RUN cp /usr/local/bin/unsquashfs /snap/snapd/current/usr/bin
 
 # Repack snapd
 RUN mksquashfs /snap/snapd/current /snapd.snap
