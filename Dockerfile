@@ -3,7 +3,7 @@ ARG BASE_OS=xenial
 # Download and repack snapd with a replacement squashfs-tools to
 # fix a bug with mksquashfs when packing a built snap.
 # See: https://bugs.launchpad.net/snapd/+bug/1733598
-FROM ubuntu:xenial as snapd
+FROM ubuntu:xenial AS snapd
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LDFLAGS=-static
@@ -54,7 +54,7 @@ RUN mksquashfs /snap/snapd/current /snapd.snap
 
 
 # Prepare the filesystem to copy into a blank image
-FROM ubuntu:${BASE_OS} as base
+FROM ubuntu:${BASE_OS} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
